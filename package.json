@@ -1,0 +1,12 @@
+{
+  "name": "clip-battle",
+  "version": "1.0.0",
+  "description": "Twitch Clip Battle - tournament voting app",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
