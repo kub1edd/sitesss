@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<link rel="icon" type="image/png" href="/favicon.png?v=2">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Клип Баттл — Twitch Clip Battle | Турнир клипов стримеров</title>
@@ -10,7 +9,10 @@
 <meta property="og:title" content="Клип Баттл — Twitch Clip Battle">
 <meta property="og:description" content="Турнир лучших клипов Twitch! Узнай какой клип самый смешной. Клип Баттл онлайн.">
 <meta property="og:type" content="website">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
 <style>
 :root {
   --bg: #09090b; --s1: #121214; --s2: #18181b; --s3: #27272a;
@@ -22,6 +24,26 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { width: 100%; height: 100%; overflow: hidden; }
 body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tx); -webkit-font-smoothing: antialiased; }
+
+@font-face {
+  font-family: 'RoundFont';
+  src: url('round.ttf') format('truetype');
+}
+
+/* Streamer Mode */
+body.streamer-mode .cc-author { display: none !important; }
+body.streamer-mode .cc-ava { display: none !important; }
+body.streamer-mode .vp-side span { opacity: 0 !important; }
+body.streamer-mode .vp-ava { display: none !important; }
+body.streamer-mode .vote-bubble { display: none !important; }
+body.streamer-mode .vp-ava-wrap::before {
+  content: attr(data-letter);
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; height: 100%;
+  font-size: 20px; font-weight: 900; color: #fff;
+  background: var(--ac); border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.2);
+}
 ::selection { background: var(--ac); color: #fff; }
 
 /* ── SCREENS ── */
@@ -41,8 +63,8 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tx)
        url('game_font.otf') format('opentype');
 }
 
-.scr { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; display: flex; opacity: 0; pointer-events: none; transition: opacity .4s ease; z-index: 1; overflow: hidden; }
-.scr.on { opacity: 1; pointer-events: all; z-index: 10; }
+.scr { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; display: none; opacity: 0; pointer-events: none; transition: opacity .4s ease; z-index: 1; overflow: hidden; }
+.scr.on { display: flex; opacity: 1; pointer-events: all; z-index: 10; }
 
 /* ═══════════════════════════════════════
    SETUP SCREEN
@@ -69,8 +91,7 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tx)
 .hero-title-text { display: flex; flex-direction: column; font-size: 96px; font-weight: 900; line-height: 0.9; letter-spacing: -4px; user-select: none; -webkit-user-select: none; }
 .hero-title-text span { background: linear-gradient(135deg, #fff 0%, var(--ac2) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 .hero-txt p { font-size: 20px; color: var(--tx2); font-weight: 500; margin-left: 10px; }
-
-.form-panel { flex: 0.8; display: flex; flex-direction: column; justify-content: center; padding: 0 70px; background: var(--bg); border-left: 1px solid var(--brd); overflow-y: auto; position: relative; z-index: 2; box-shadow: -20px 0 50px rgba(0,0,0,0.5); }
+.form-panel { flex: 0.8; display: flex; flex-direction: column; justify-content: center; padding: 0 70px; background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cg transform='rotate(-15, 100, 100) translate(20, 20)'%3E%3Crect x='10' y='30' width='160' height='100' rx='8' fill='rgba(255,255,255,0.02)' stroke='rgba(255,255,255,0.05)' stroke-width='2'/%3E%3Crect x='18' y='38' width='144' height='84' rx='4' fill='rgba(0,0,0,0.2)'/%3E%3Cpath d='M 75 130 L 105 130 L 115 155 L 65 155 Z' fill='rgba(255,255,255,0.02)'/%3E%3Crect x='50' y='155' width='80' height='6' rx='3' fill='rgba(255,255,255,0.05)'/%3E%3Cpolygon points='85,70 105,80 85,90' fill='rgba(255,255,255,0.04)'/%3E%3C/g%3E%3C/svg%3E") no-repeat bottom -70px right -80px, linear-gradient(135deg, var(--bg) 40%, rgba(17,24,39,0.9) 100%); background-size: 450px, cover; border-left: 1px solid var(--brd); overflow-y: auto; position: relative; z-index: 2; box-shadow: -20px 0 50px rgba(0,0,0,0.5); }
 .fg { margin-bottom: 28px; }
 .fl { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; color: var(--tx2); margin-bottom: 12px; letter-spacing: 1px; text-transform: uppercase; }
 .fl svg { width: 16px; height: 16px; color: var(--tx3); fill: currentColor; stroke: none; }
@@ -126,6 +147,28 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tx)
 .btn-go svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2.5; transition: transform 0.3s; }
 .btn-go:hover svg { transform: translateX(5px) scale(1.1); }
 .err-msg { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); color: var(--red); padding: 12px 16px; border-radius: 10px; font-size: 13px; font-weight: 600; margin-bottom: 20px; display: none; }
+
+.streamer-toggle-box {
+  position: absolute; top: 10px; right: 10px;
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(18,18,20,0.8); backdrop-filter: blur(10px);
+  padding: 8px 16px; border-radius: 20px; border: 1px solid var(--s3);
+  font-size: 13px; font-weight: 600; color: var(--tx2); z-index: 10; cursor: help;
+}
+.streamer-toggle-box .sm-tw-icon { width: 16px; height: 16px; color: #a970ff; flex-shrink: 0; }
+.sm-tooltip {
+  position: absolute; top: calc(100% + 10px); right: 0;
+  background: rgba(18,18,20,0.95); padding: 12px 16px; border-radius: 8px; border: 1px solid var(--s3);
+  font-size: 12px; color: var(--tx2); width: 260px; opacity: 0; pointer-events: none; transition: 0.3s;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-weight: 500; text-align: left; line-height: 1.5;
+}
+.streamer-toggle-box:hover .sm-tooltip { opacity: 1; transform: translateY(-5px); }
+.switch { position: relative; display: inline-block; width: 34px; height: 20px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--s3); transition: .4s; border-radius: 20px; }
+.slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+input:checked + .slider { background-color: var(--ac); }
+input:checked + .slider:before { transform: translateX(14px); }
 
 /* ═══════════════════════════════════════
    LOADING
@@ -237,31 +280,50 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tx)
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   padding-bottom: 60px;
   gap: 24px;
-  background: var(--bg);
+  background: radial-gradient(ellipse at 20% 50%, rgba(139,92,246,0.15), transparent 50%),
+              radial-gradient(ellipse at 80% 20%, rgba(236,72,153,0.1), transparent 50%),
+              radial-gradient(ellipse at 50% 100%, rgba(59,130,246,0.1), transparent 50%),
+              var(--bg);
   opacity: 0; pointer-events: none;
   transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
 }
+.win-overlay::before {
+  content: ''; position: absolute; inset: -50%; z-index: 0;
+  background: conic-gradient(from 0deg at 50% 50%, transparent, rgba(139,92,246,0.05), transparent, rgba(236,72,153,0.05), transparent);
+  animation: winBgSpin 15s linear infinite;
+}
+@keyframes winBgSpin { to { transform: rotate(360deg); } }
 .win-overlay.on { opacity: 1; pointer-events: auto; }
+
+/* Physics confetti canvas */
+#physics-confetti { position: absolute; inset: 0; z-index: 2; pointer-events: auto; }
+
+.win-overlay .win-buttons { display: flex; gap: 12px; align-items: center; animation: btnReIn 0.6s 0.8s cubic-bezier(0.34,1.56,0.64,1) both; margin-top: 10px; z-index: 10; position: relative; pointer-events: auto; }
+.btn-share { background: linear-gradient(135deg, #3b82f6, #8b5cf6); border: none; color: #fff; padding: 16px 28px; font-family: inherit; font-size: 14px; font-weight: 700; border-radius: 12px; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px; position: relative; z-index: 10; }
+.btn-share svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2.5; }
+.btn-share:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 10px 30px rgba(59,130,246,0.5); }
 .win-overlay .win-clip-wrap {
   width: 90%; max-width: 700px; aspect-ratio: 16/9;
   border-radius: 16px; overflow: hidden;
   box-shadow: 0 0 60px rgba(139,92,246,0.4), 0 30px 80px rgba(0,0,0,0.6);
   border: 2px solid var(--ac);
   animation: winClipIn 0.8s cubic-bezier(0.4, 0, 0.2, 1) both;
+  z-index: 10; position: relative; pointer-events: auto;
 }
 @keyframes winClipIn { from { opacity: 0; transform: scale(0.8) translateY(40px); } to { opacity: 1; transform: scale(1) translateY(0); } }
-.win-overlay .win-title { font-size: 40px; font-weight: 900; color: #fff; letter-spacing: 2px; text-transform: uppercase; animation: winTextIn 0.6s 0.4s cubic-bezier(0.4, 0, 0.2, 1) both; display: flex; align-items: center; gap: 16px; text-shadow: 0 0 20px rgba(139,92,246,0.6); }
+.win-overlay .win-title { font-size: 40px; font-weight: 900; color: #fff; letter-spacing: 2px; text-transform: uppercase; animation: winTextIn 0.6s 0.4s cubic-bezier(0.4, 0, 0.2, 1) both; display: flex; align-items: center; gap: 16px; text-shadow: 0 0 20px rgba(139,92,246,0.6); z-index: 10; position: relative; pointer-events: none; }
 .win-overlay .win-trophy { width: 56px; height: 56px; filter: drop-shadow(0 0 16px rgba(255,215,0,0.4)) drop-shadow(0 10px 10px rgba(0,0,0,0.5)); animation: trophyBounce 0.8s 0.4s cubic-bezier(0.34,1.56,0.64,1) both; }
 @keyframes trophyBounce { 0% { opacity:0; transform: scale(0) rotate(-20deg); } 60% { transform: scale(1.2) rotate(5deg); } 100% { opacity:1; transform: scale(1) rotate(0deg); } }
 @keyframes winTextIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-.win-overlay .win-meta-final { display: flex; align-items: center; gap: 16px; margin-top: 10px; animation: winTextIn 0.6s 0.6s cubic-bezier(0.4, 0, 0.2, 1) both; }
+.win-overlay .win-meta-final { display: flex; align-items: center; gap: 16px; margin-top: 10px; animation: winTextIn 0.6s 0.6s cubic-bezier(0.4, 0, 0.2, 1) both; z-index: 10; position: relative; pointer-events: none; }
 .win-overlay .win-ava { width: 54px; height: 54px; border-radius: 50%; object-fit: cover; border: 2px solid var(--ac); box-shadow: 0 0 20px rgba(139,92,246,0.4); }
 .win-overlay .win-text-col { display: flex; flex-direction: column; gap: 4px; }
 .win-overlay .win-sub { font-size: 24px; color: #fff; font-weight: 800; max-width: 600px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .win-overlay .win-author { font-size: 16px; color: var(--ac2); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
 
-.win-overlay .btn-re { background: var(--s2); border: 1px solid var(--s3); color: var(--tx); padding: 16px 36px; font-family: inherit; font-size: 16px; font-weight: 700; border-radius: 12px; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 10px; animation: btnReIn 0.6s 0.8s cubic-bezier(0.34,1.56,0.64,1) both; margin-top: 10px; position: relative; overflow: hidden; }
+.win-overlay .btn-re { background: var(--s2); border: 1px solid var(--s3); color: var(--tx); padding: 16px 36px; font-family: inherit; font-size: 16px; font-weight: 700; border-radius: 12px; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 10px; position: relative; overflow: hidden; z-index: 10; pointer-events: auto; }
 @keyframes btnReIn { from { opacity:0; transform: scale(0.5) translateY(30px); } to { opacity:1; transform: scale(1) translateY(0); } }
 .win-overlay .btn-re svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2.5; transition: transform 0.3s; }
 .win-overlay .btn-re:hover { background: var(--ac); border-color: var(--ac); transform: translateY(-3px) scale(1.05); box-shadow: 0 10px 30px rgba(139,92,246,0.5); }
@@ -348,8 +410,8 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tx)
 
 .vp-main { display: flex; align-items: center; gap: 12px; overflow: hidden; }
 
-.vp-ava-wrap { flex-shrink: 0; }
-.vp-ava { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; background: var(--s2); border: 2px solid rgba(255,255,255,0.1); transition: transform 0.5s; }
+.vp-ava-wrap { flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%; }
+.vp-ava { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: var(--s2); border: 2px solid rgba(255,255,255,0.1); transition: transform 0.5s; }
 .vp-ava.lead { transform: scale(1.1); border-color: rgba(255,255,255,0.3); }
 
 .vp-bar-wrap {
@@ -423,12 +485,49 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tx)
 .btn-re { background: var(--s2); border: 1px solid var(--s3); color: var(--tx); padding: 16px 36px; font-family: inherit; font-size: 14px; font-weight: 700; border-radius: 12px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 10px; }
 .btn-re svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2.5; }
 .btn-re:hover { background: var(--ac); border-color: var(--ac); transform: translateY(-2px); }
+
+/* Round Transition Overlay */
+.round-transition {
+  position: fixed; inset: 0; z-index: 2000;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: rgba(10,10,12,0.7); backdrop-filter: blur(25px);
+  opacity: 0; pointer-events: none; transition: opacity 0.3s;
+}
+.round-transition.on { opacity: 1; pointer-events: auto; }
+.rt-content {
+  text-align: center;
+  transform: scale(0.5); opacity: 0;
+  transition: all 0.5s cubic-bezier(0.34,1.56,0.64,1);
+}
+.round-transition.on .rt-content {
+  transform: scale(1); opacity: 1;
+}
+#rt-title {
+  font-family: 'RoundFont', 'Inter', sans-serif;
+  font-size: 100px; font-weight: 900; color: #fff;
+  letter-spacing: 2px; margin: 0; line-height: 1;
+}
+#rt-subtitle {
+  display: none;
+}
 </style>
 </head>
 <body>
 
 <!-- ═══════ SETUP ═══════ -->
 <div id="S-setup" class="scr on">
+  <div class="streamer-toggle-box">
+    <svg viewBox="0 0 24 24" class="sm-tw-icon"><path fill="currentColor" d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/></svg>
+    <span>Режим стримера</span>
+    <label class="switch">
+      <input type="checkbox" id="inp-sm" onchange="document.body.classList.toggle('streamer-mode', this.checked)">
+      <span class="slider"></span>
+    </label>
+    <div class="sm-tooltip">
+      <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;float:left;margin-right:8px;margin-top:2px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      Скрывает авторов клипов и людей, которые проголосовали, чтобы избежать предвзятости чата. Вся информация будет раскрыта в финале!
+    </div>
+  </div>
   <div class="hero">
     <div class="author-badge">автор: кубик</div>
     <div class="hero-mesh"></div>
@@ -593,31 +692,26 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tx)
         <div class="win-author" id="win-author">Автор</div>
       </div>
     </div>
-    <button class="btn-re" id="btn-restart" onclick="restartTournament()"><svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>Новый турнир</button>
+    <div class="win-buttons">
+      <button class="btn-share" onclick="shareWin()"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Поделиться</button>
+      <button class="btn-re" id="btn-restart" onclick="restartTournament()"><svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>Новый турнир</button>
+    </div>
+    <canvas id="physics-confetti"></canvas>
   </div>
 </div>
 
-<!-- ═══════ WINNER ═══════ -->
-<div id="S-win" class="scr">
-  <div class="win-glow"></div>
-  <div class="particle" style="width:6px;height:6px;left:20%;bottom:10%;background:var(--ac);animation-delay:0s"></div>
-  <div class="particle" style="width:4px;height:4px;left:35%;bottom:5%;background:var(--ac2);animation-delay:.8s"></div>
-  <div class="particle" style="width:8px;height:8px;left:65%;bottom:15%;background:var(--ac);animation-delay:1.5s"></div>
-  <div class="particle" style="width:5px;height:5px;left:80%;bottom:8%;background:var(--ac2);animation-delay:2.2s"></div>
-  <div class="win-wrap">
-    <div class="win-tag">★ ПОБЕДИТЕЛЬ ТУРНИРА</div>
-    <div class="win-card">
-      <div class="cc-iframe" style="max-height:480px"><iframe id="wf" src="" allowfullscreen scrolling="no" style="width:100%;height:100%;border:none;display:block;"></iframe></div>
-      <div class="win-meta"><img id="wa" src=""><div class="win-meta-txt"><h2 id="wt">—</h2><p id="wau">—</p></div></div>
-    </div>
-    <button class="btn-re" onclick="location.reload()"><svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>Новый турнир</button>
+<!-- Round Transition Screen -->
+<div id="round-transition" class="round-transition">
+  <div class="rt-content">
+    <h2 id="rt-title">РАУНД 1</h2>
+    <div id="rt-subtitle">1/4 ФИНАЛА</div>
   </div>
 </div>
 
 <script>
 const G = { br:[], rd:0, mt:0, vt:{}, va:false, ws:null, ch:{}, per:'ALL_TIME', mode:'pop', timer:null, colors:[] };
 const $ = id => document.getElementById(id);
-const show = id => { document.querySelectorAll('.scr').forEach(s => s.classList.remove('on')); $(id).classList.add('on'); };
+const show = id => { document.querySelectorAll('.scr').forEach(s => { s.classList.remove('on'); s.style.display = 'none'; }); const el = $(id); el.style.display = 'flex'; requestAnimationFrame(() => el.classList.add('on')); };
 
 const PALETTE = ['#f43f5e','#3b82f6','#10b981','#f59e0b','#8b5cf6','#ec4899','#0ea5e9','#f97316'];
 function genColors() { const c=[...PALETTE].sort(()=>Math.random()-0.5); return [c[0],c[1]]; }
@@ -679,7 +773,7 @@ document.addEventListener('click', e => { if (!e.target.closest('.ac-wrap')) $('
 /* ── Clips ── */
 async function fetchClips(ch,n,per,mode) {
   const period = per;
-  const q=`{user(login:"${ch}"){displayName profileImageURL(width:150) clips(first:50,criteria:{period:${period},sort:VIEWS_DESC}){edges{node{slug title viewCount curator{displayName profileImageURL(width:70)}}}}}}`;
+  const q=`{user(login:"${ch}"){displayName profileImageURL(width:150) clips(first:50,criteria:{period:${period},sort:VIEWS_DESC}){edges{node{slug title viewCount thumbnailURL curator{displayName profileImageURL(width:70)}}}}}}`;
   const d=await gql(q);
   if(!d.data?.user) throw new Error(`Канал «${ch}» не найден`);
   const u=d.data.user; G.ch={name:u.displayName,ava:u.profileImageURL};
@@ -688,6 +782,7 @@ async function fetchClips(ch,n,per,mode) {
   const pool=mode==='rnd'?edges.sort(()=>Math.random()-0.5):edges;
   return pool.slice(0,n).sort(()=>Math.random()-0.5).map(e=>({
     slug:e.node.slug, title:e.node.title||'Без названия', views:e.node.viewCount||0,
+    thumb:e.node.thumbnailURL||'',
     author:e.node.curator?.displayName||'Twitch', ava:e.node.curator?.profileImageURL||''
   }));
 }
@@ -737,9 +832,6 @@ function renderMatch() {
 
   $('ch-ava').src=G.ch.ava||''; $('ch-nm').textContent=G.ch.name||'';
 
-  // Если это не финал, проигрываем звук смены раунда
-  if (G.mt === 0) { AudioSys.transition(); }
-
   // Сброс классов
   $('c1').className = 'cc';
   $('c2').className = 'cc';
@@ -760,6 +852,10 @@ function renderMatch() {
   $('vn1').textContent=truncTitle(m.c1.title, 20);
   $('vn2').textContent=truncTitle(m.c2.title, 20);
   $('va1').src=m.c1.ava||''; $('va2').src=m.c2.ava||'';
+  
+  // Устанавливаем первую букву названия для режима стримера
+  $('va1').parentElement.setAttribute('data-letter', (m.c1.title || '?').charAt(0).toUpperCase());
+  $('va2').parentElement.setAttribute('data-letter', (m.c2.title || '?').charAt(0).toUpperCase());
 
   IM.show(m.c1.slug, m.c2.slug);
 
@@ -777,6 +873,33 @@ function updateBar() {
   $('vs1').style.width=lp+'%'; $('vs2').style.width=(100-lp)+'%';
   $('v-spark').style.left=lp+'%';
   $('va1').classList.toggle('lead',v1>v2); $('va2').classList.toggle('lead',v2>v1);
+}
+
+function showRoundTransition(onReady) {
+  const matchesInRound = G.br[G.rd].length;
+  let stageName = '';
+  if (matchesInRound === 1) stageName = 'ФИНАЛ';
+  else if (matchesInRound === 2) stageName = 'ПОЛУФИНАЛ';
+  else if (matchesInRound === 4) stageName = 'ЧЕТВЕРТЬФИНАЛ';
+  else stageName = `1/${matchesInRound * 2} ФИНАЛА`;
+
+  let matchNum = 1;
+  for (let i = 0; i < G.rd; i++) matchNum += G.br[i].length;
+  matchNum += G.mt;
+
+  $('rt-title').textContent = `РАУНД ${matchNum}`;
+  $('rt-subtitle').textContent = stageName;
+  $('round-transition').classList.add('on');
+  
+  AudioSys.play('transition');
+
+  setTimeout(() => {
+    onReady();
+    setTimeout(() => {
+      AudioSys.play('transition');
+      $('round-transition').classList.remove('on');
+    }, 200);
+  }, 1500);
 }
 
 function startVote() {
@@ -849,10 +972,13 @@ function nextMatch() {
     
     $('win-ov').classList.add('on');          // Показываем оверлей "ПОБЕДИТЕЛЬ"
     launchConfetti();                          // Запускаем конфетти!
+    setTimeout(launchPhysicsConfetti, 1500);   // Физическое конфетти (можно хватать мышкой!)
     return;
   }
-  
-  renderMatch();
+  // Показываем транзишн, а затем рендерим следующий матч
+  showRoundTransition(() => {
+    renderMatch();
+  });
 }
 
 /* ── Chat ── */
@@ -921,7 +1047,7 @@ const IM = {
       const f = document.createElement('iframe');
       f.style.cssText = 'position:absolute; opacity:0; pointer-events:none; transition: opacity 0.3s, filter 0.6s cubic-bezier(0.4, 0, 0.2, 1); border:none; background:#000; border-radius: 16px 16px 0 0;';
       f.allowFullscreen = true; f.scrolling = 'no';
-      f.src = `https://clips.twitch.tv/embed?clip=${c.slug}&parent=${pr}&autoplay=false`;
+      f.src = `https://clips.twitch.tv/embed?clip=${c.slug}&parent=${pr}&autoplay=false&quality=360`;
       
       let done = false;
       const finish = () => { 
@@ -941,6 +1067,18 @@ const IM = {
   show: function(s1, s2) {
     this.pool.style.display = 'block';
     this.running = true;
+    
+    // Останавливаем клипы с прошлого раунда, перезагружая их iframe
+    if (this.active) {
+      this.active.forEach(f => {
+        if (f && f !== this.frames[s1] && f !== this.frames[s2]) {
+          const oldSrc = f.src;
+          f.src = '';
+          f.src = oldSrc;
+        }
+      });
+    }
+
     Object.values(this.frames).forEach(f => { f.style.opacity = '0'; f.style.pointerEvents = 'none'; f.style.filter = 'none'; });
     this.active = [this.frames[s1], this.frames[s2]];
     if (this.active[0]) { this.active[0].style.opacity = '1'; this.active[0].style.pointerEvents = 'auto'; }
@@ -1075,13 +1213,19 @@ AudioSys.init();
 
 // Глобальный слушатель для звуков кнопок (фикс бага)
 document.addEventListener('mouseover', e => {
-  const el = e.target.closest('button') || e.target.closest('.ac-item') || e.target.closest('.pd-opt') || e.target.closest('label');
-  if (el) AudioSys.hover(el);
-  else AudioSys.lastHovered = null; // Сброс при уходе мыши
+  // Выбираем только те элементы, которые реально должны звучать при наведении
+  const el = e.target.closest('button, .ac-item, .pd-opt, .seg label');
+  if (el) {
+    if (AudioSys.lastHovered !== el) {
+      AudioSys.hover(el);
+    }
+  } else {
+    AudioSys.lastHovered = null;
+  }
 }, true);
 
 document.addEventListener('click', e => {
-  const el = e.target.closest('button') || e.target.closest('.ac-item') || e.target.closest('.pd-opt') || e.target.closest('label');
+  const el = e.target.closest('button, .ac-item, .pd-opt, .seg label, .switch');
   if (el) {
     // Пропускаем эти ID, так как у них свои звуки внутри функций
     if (el.id === 'bv' || el.id === 'btn-mute' || el.id === 'btn-start' || el.id === 'btn-skip' || el.id === 'btn-restart') return;
@@ -1148,6 +1292,172 @@ function launchConfetti() {
     if (alive && frame < 400) requestAnimationFrame(draw);
   }
   draw();
+}
+
+/* ── Физическое конфетти (Matter.js) ── */
+function launchPhysicsConfetti() {
+  const canvas = document.getElementById('physics-confetti');
+  if (!canvas || typeof Matter === 'undefined') return;
+  const parent = canvas.parentElement;
+  const W = parent.offsetWidth, H = parent.offsetHeight;
+
+  const { Engine, Render, Runner, World, Bodies, Mouse, MouseConstraint } = Matter;
+  const engine = Engine.create();
+  
+  const render = Render.create({
+    canvas: canvas,
+    engine: engine,
+    options: { width: W, height: H, wireframes: false, background: 'transparent' }
+  });
+
+  // Убираем верхнюю и боковые стены, оставляем только пол, чтобы конфетти копилось внизу
+  const floor = Bodies.rectangle(W/2, H+50, W+200, 100, { isStatic: true, render: { visible: false } });
+  World.add(engine.world, [floor]);
+  
+  // Генератор базовых PNG-кружочков.
+  // ЧТОБЫ ПОСТАВИТЬ СВОИ КАРТИНКИ:
+  // Просто закомментируй блок ниже и раскомментируй строку с массивом ссылок!
+  const genPng = (color) => {
+    const c = document.createElement('canvas'); c.width = 32; c.height = 32;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = color; ctx.beginPath(); ctx.arc(16,16,16,0,Math.PI*2); ctx.fill();
+    return c.toDataURL();
+  };
+  const images = [
+    genPng('#FFD700'), genPng('#EC4899'), genPng('#3B82F6'), genPng('#10B981')
+  ];
+  // const images = ['confetti1.png', 'confetti2.png', 'confetti3.png']; // ТВОИ ФАЙЛЫ
+
+  const confetti = [];
+  function spawnConfetti() {
+    if (confetti.length > 150) {
+      const old = confetti.shift();
+      World.remove(engine.world, old);
+    }
+    const x = Math.random() * W;
+    const size = Math.random() * 10 + 20; // 20-30px
+    const img = images[Math.floor(Math.random() * images.length)];
+    const body = Bodies.circle(x, -50, size/2, {
+      restitution: 0.6, frictionAir: 0.02,
+      render: { sprite: { texture: img, xScale: size/32, yScale: size/32 } }
+    });
+    World.add(engine.world, body);
+    confetti.push(body);
+  }
+
+  // Спавним постоянно
+  const spawnInterval = setInterval(() => {
+    spawnConfetti();
+    spawnConfetti();
+  }, 200);
+
+  const mouse = Mouse.create(render.canvas);
+  const mc = MouseConstraint.create(engine, {
+    mouse, constraint: { stiffness: 0.2, render: { visible: false } }
+  });
+  World.add(engine.world, mc);
+  render.mouse = mouse;
+
+  Render.run(render);
+  const runner = Runner.create();
+  Runner.run(runner, engine);
+
+  setTimeout(() => {
+    clearInterval(spawnInterval);
+    Render.stop(render);
+    Runner.stop(runner);
+    World.clear(engine.world);
+    Engine.clear(engine);
+  }, 60000); // Идёт 1 минуту
+}
+
+/* ── Поделиться победой ── */
+async function shareWin() {
+  const w = G.br[G.br.length-1][0].win;
+  if (!w) return;
+  const btn = document.querySelector('.btn-share');
+  const orig = btn.innerHTML;
+  btn.innerHTML = 'Создание...';
+  btn.disabled = true;
+
+  const cvs = document.createElement('canvas');
+  cvs.width = 1200; cvs.height = 630;
+  const ctx = cvs.getContext('2d');
+
+  // Background
+  ctx.fillStyle = '#09090b'; ctx.fillRect(0, 0, 1200, 630);
+  const grd = ctx.createRadialGradient(600, 315, 100, 600, 315, 800);
+  grd.addColorStop(0, '#8b5cf655'); grd.addColorStop(1, '#09090b');
+  ctx.fillStyle = grd; ctx.fillRect(0, 0, 1200, 630);
+
+  // Logo text (Left side)
+  ctx.fillStyle = '#fff'; ctx.font = '900 70px Inter'; ctx.textAlign = 'left';
+  ctx.fillText('CLIP BATTLE', 80, 240);
+  ctx.fillStyle = '#a78bfa'; ctx.font = '700 36px Inter';
+  ctx.fillText('ПОБЕДИТЕЛЬ ТУРНИРА', 80, 300);
+
+  ctx.fillStyle = '#a1a1aa'; ctx.font = '500 28px Inter';
+  ctx.fillText('Стример: ' + (G.ch.name || 'Twitch'), 80, 460);
+  ctx.fillText('Канал: twitch.tv/' + w.author, 80, 510);
+
+  // Thumbnail & Title (Right side)
+  const tx = 560, ty = 120, tw = 560, th = 315;
+  try {
+    if(w.thumb) {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.src = w.thumb;
+      await new Promise(r => { img.onload = r; img.onerror = r; });
+      if(img.complete && img.naturalWidth) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.roundRect(tx, ty, tw, th, 16);
+        ctx.clip();
+        ctx.drawImage(img, tx, ty, tw, th);
+        ctx.restore();
+        
+        ctx.beginPath();
+        ctx.roundRect(tx, ty, tw, th, 16);
+        ctx.lineWidth = 4; ctx.strokeStyle = '#8b5cf6'; ctx.stroke();
+      }
+    }
+  } catch(e) {}
+  
+  // Title under thumbnail
+  ctx.fillStyle = '#fff'; ctx.font = '800 36px Inter';
+  let t = w.title; if(t.length > 30) t = t.slice(0,30)+'...';
+  ctx.fillText(t, tx, ty + th + 60);
+  ctx.fillStyle = '#a1a1aa'; ctx.font = '600 24px Inter';
+  ctx.fillText('Автор клипа: ' + w.author, tx, ty + th + 100);
+
+  // Отправляем картинку на наш сервер
+  cvs.toBlob(async (blob) => {
+    try {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64data = reader.result;
+        await fetch('/api/share', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ slug: w.slug, img: base64data })
+        });
+        
+        // Копируем спец. ссылку нашего сайта
+        const customLink = `${window.location.origin}/s/${w.slug}`;
+        const text = `🏆 Лучший клип на Clip Battle!\n«${w.title}»\n\nСмотреть: ${customLink}`;
+        await navigator.clipboard.writeText(text);
+
+        btn.innerHTML = '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Ссылка скопирована!';
+        btn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+        setTimeout(() => { btn.innerHTML = orig; btn.style.background = ''; btn.disabled = false; }, 2000);
+      };
+      reader.readAsDataURL(blob);
+    } catch(e) {
+      console.error(e);
+      btn.innerHTML = 'Ошибка';
+      setTimeout(() => { btn.innerHTML = orig; btn.disabled = false; }, 2000);
+    }
+  }, 'image/jpeg', 0.9);
 }
 
 /* ── Бульбашки голосов ── */
@@ -1250,10 +1560,14 @@ async function go() {
     
     setTimeout(() => {
         initBattleParticles();
-        show('S-battle'); renderMatch();
+        show('S-battle');
         // Запускаем фоновую музыку
         const bgm = document.getElementById('bgm');
         if (bgm && !AudioSys.bgmMuted) bgm.play().catch(()=>{});
+        
+        showRoundTransition(() => {
+            renderMatch();
+        });
     }, 400);
   } catch(e) {
     $('err').textContent=e.message; $('err').style.display='block'; show('S-setup');

@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
 
-const PORT = process.env.PORT || 3000;
+const PORT = 3000;
 const TWITCH_WEB_CLIENT = 'kimne78kx3ncx6brgo4mv6wki5h1ko';
 
 // Массив разных Client-ID, включая мобильные и консольные, которые обходят Integrity
@@ -97,12 +97,63 @@ const server = http.createServer(async (req, res) => {
     }
 
     // ══════════════════════════════════════════════
+    //  SHARE IMAGE UPLOAD (Создание кастомной ссылки)
+    // ══════════════════════════════════════════════
+    if (req.url === '/api/share' && req.method === 'POST') {
+        let body = '';
+        req.on('data', c => body += c);
+        req.on('end', () => {
+            try {
+                const data = JSON.parse(body);
+                const base64Data = data.img.replace(/^data:image\/jpeg;base64,/, "");
+                const shareDir = path.join(__dirname, 'public', 'shares');
+                if (!fs.existsSync(shareDir)) fs.mkdirSync(shareDir, { recursive: true });
+                
+                fs.writeFileSync(path.join(shareDir, `${data.slug}.jpg`), base64Data, 'base64');
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: true }));
+            } catch (e) {
+                res.writeHead(500); res.end(JSON.stringify({ error: e.message }));
+            }
+        });
+        return;
+    }
+
+    // ══════════════════════════════════════════════
+    //  OPENGRAPH LINK GENERATOR
+    // ══════════════════════════════════════════════
+    if (req.url.startsWith('/s/')) {
+        const slug = req.url.split('/s/')[1];
+        const html = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Победитель Clip Battle!</title>
+    <meta property="og:title" content="Победитель турнира Clip Battle!">
+    <meta property="og:description" content="Смотреть лучший клип!">
+    <meta property="og:image" content="http://${req.headers.host}/shares/${slug}.jpg">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="http://${req.headers.host}/shares/${slug}.jpg">
+    <meta http-equiv="refresh" content="0; url=https://clips.twitch.tv/${slug}">
+</head>
+<body style="background:#09090b;color:#fff;font-family:sans-serif;text-align:center;padding:50px;">
+    Перенаправление на Twitch...
+    <script>window.location.href="https://clips.twitch.tv/${slug}";</script>
+</body>
+</html>`;
+        res.writeHead(200, { 'Content-Type': 'text/html' });
+        res.end(html);
+        return;
+    }
+
+    // ══════════════════════════════════════════════
     //  STATIC FILES
     // ══════════════════════════════════════════════
     let filePath = './public' + decodeURI(req.url);
     if (req.url === '/') filePath = './public/index.html';
     const ext = String(path.extname(filePath)).toLowerCase();
-    const mime = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.otf': 'font/otf', '.ttf': 'font/ttf', '.mp3': 'audio/mpeg' };
+    const mime = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.otf': 'font/otf', '.ttf': 'font/ttf', '.mp3': 'audio/mpeg', '.ico': 'image/x-icon', '.json': 'application/json' };
     fs.readFile(filePath, (err, content) => {
         if (err) { res.writeHead(404); res.end('Not found'); }
         else { res.writeHead(200, { 'Content-Type': mime[ext] || 'application/octet-stream' }); res.end(content); }
