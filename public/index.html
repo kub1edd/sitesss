@@ -9,10 +9,12 @@
 <meta property="og:title" content="Клип Баттл — Twitch Clip Battle">
 <meta property="og:description" content="Турнир лучших клипов Twitch! Узнай какой клип самый смешной. Клип Баттл онлайн.">
 <meta property="og:type" content="website">
+<meta property="og:image" content="https://hzon.fun/preview_link.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://hzon.fun/preview_link.png">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
 <style>
 :root {
   --bg: #09090b; --s1: #121214; --s2: #18181b; --s3: #27272a;
@@ -296,8 +298,7 @@ input:checked + .slider:before { transform: translateX(14px); }
 @keyframes winBgSpin { to { transform: rotate(360deg); } }
 .win-overlay.on { display: flex; opacity: 1; pointer-events: auto; }
 
-/* Physics confetti canvas */
-#physics-confetti { position: absolute; inset: 0; z-index: 2; pointer-events: auto; }
+
 
 .win-overlay .win-buttons { display: flex; gap: 12px; align-items: center; animation: btnReIn 0.6s 0.8s cubic-bezier(0.34,1.56,0.64,1) both; margin-top: 10px; z-index: 10; position: relative; pointer-events: auto; }
 .btn-share { background: linear-gradient(135deg, #3b82f6, #8b5cf6); border: none; color: #fff; padding: 16px 28px; font-family: inherit; font-size: 14px; font-weight: 700; border-radius: 12px; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px; position: relative; z-index: 10; }
@@ -695,8 +696,6 @@ input:checked + .slider:before { transform: translateX(14px); }
     <div class="win-buttons">
       <button class="btn-share" onclick="shareWin()"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Поделиться</button>
       <button class="btn-re" id="btn-restart" onclick="restartTournament()"><svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>Новый турнир</button>
-    </div>
-    <canvas id="physics-confetti"></canvas>
   </div>
 </div>
 
@@ -971,8 +970,7 @@ function nextMatch() {
     $('win-ava').src = w.ava || '';
     
     $('win-ov').classList.add('on');          // Показываем оверлей "ПОБЕДИТЕЛЬ"
-    launchConfetti();                          // Запускаем конфетти!
-    setTimeout(launchPhysicsConfetti, 1500);   // Физическое конфетти (можно хватать мышкой!)
+    launchConfetti();                          // Запускаем бесконечное конфетти!
     return;
   }
   // Показываем транзишн, а затем рендерим следующий матч
@@ -1233,142 +1231,85 @@ document.addEventListener('click', e => {
   }
 }, true);
 
-/* ── Конфетти на экране победителя ── */
+/* ── Бесконечное падающее конфетти ── */
 function launchConfetti() {
   AudioSys.finalWin();
   const canvas = document.getElementById('confetti-canvas');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
-  canvas.width = canvas.parentElement.offsetWidth;
-  canvas.height = canvas.parentElement.offsetHeight;
+  
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
   
   const colors = ['#FFD700','#FFA751','#FFE259','#8B5CF6','#EC4899','#3B82F6','#10B981','#F43F5E'];
-  const coins = [];
+  const confetti = [];
+  let isRunning = true;
   
-  for (let i = 0; i < 120; i++) {
-    coins.push({
-      x: Math.random() * canvas.width,
-      y: Math.random() * -canvas.height,
-      r: Math.random() * 6 + 3,
-      c: colors[Math.floor(Math.random() * colors.length)],
-      vx: (Math.random() - 0.5) * 3,
-      vy: Math.random() * 4 + 2,
-      rot: Math.random() * 360,
-      rv: (Math.random() - 0.5) * 8,
-      shape: Math.random() > 0.5 ? 'circle' : 'rect',
-      opacity: 1
-    });
+  function spawn() {
+    if(!isRunning) return;
+    for(let i=0; i<3; i++) {
+      confetti.push({
+        x: Math.random() * canvas.width,
+        y: -20 - Math.random() * 50, // спавн за верхним краем
+        w: Math.random() * 10 + 5,
+        h: Math.random() * 15 + 10,
+        c: colors[Math.floor(Math.random() * colors.length)],
+        vx: (Math.random() - 0.5) * 3,
+        vy: Math.random() * 3 + 2,
+        rot: Math.random() * 360,
+        rv: (Math.random() - 0.5) * 10
+      });
+    }
   }
   
-  let frame = 0;
+  let spawnInterval = setInterval(spawn, 50);
+  
   function draw() {
+    if(!isRunning) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    let alive = false;
-    coins.forEach(c => {
-      c.x += c.vx + Math.sin(frame * 0.02 + c.r) * 0.5;
+    
+    for (let i = confetti.length - 1; i >= 0; i--) {
+      let c = confetti[i];
+      c.x += c.vx + Math.sin(Date.now() / 1000 + c.w) * 1;
       c.y += c.vy;
-      c.vy += 0.04;
       c.rot += c.rv;
-      if (c.y > canvas.height + 20) { c.opacity -= 0.02; }
-      if (c.opacity <= 0) return;
-      alive = true;
+      
+      // Удаляем когда падает за низ экрана
+      if (c.y > canvas.height + 50) {
+        confetti.splice(i, 1);
+        continue;
+      }
       
       ctx.save();
-      ctx.globalAlpha = Math.max(0, c.opacity);
       ctx.translate(c.x, c.y);
       ctx.rotate(c.rot * Math.PI / 180);
       ctx.fillStyle = c.c;
-      
-      if (c.shape === 'circle') {
-        ctx.beginPath();
-        ctx.ellipse(0, 0, c.r, c.r * 0.6, 0, 0, Math.PI * 2);
-        ctx.fill();
-      } else {
-        ctx.fillRect(-c.r, -c.r * 0.4, c.r * 2, c.r * 0.8);
-      }
+      ctx.fillRect(-c.w/2, -c.h/2, c.w, c.h);
       ctx.restore();
-    });
-    frame++;
-    if (alive && frame < 400) requestAnimationFrame(draw);
-  }
-  draw();
-}
-
-/* ── Физическое конфетти (Matter.js) ── */
-function launchPhysicsConfetti() {
-  const canvas = document.getElementById('physics-confetti');
-  if (!canvas || typeof Matter === 'undefined') return;
-  const parent = canvas.parentElement;
-  const W = parent.offsetWidth, H = parent.offsetHeight;
-
-  const { Engine, Render, Runner, World, Bodies, Mouse, MouseConstraint } = Matter;
-  const engine = Engine.create();
-  
-  const render = Render.create({
-    canvas: canvas,
-    engine: engine,
-    options: { width: W, height: H, wireframes: false, background: 'transparent' }
-  });
-
-  // Убираем верхнюю и боковые стены, оставляем только пол, чтобы конфетти копилось внизу
-  const floor = Bodies.rectangle(W/2, H+50, W+200, 100, { isStatic: true, render: { visible: false } });
-  World.add(engine.world, [floor]);
-  
-  // Генератор базовых PNG-кружочков.
-  // ЧТОБЫ ПОСТАВИТЬ СВОИ КАРТИНКИ:
-  // Просто закомментируй блок ниже и раскомментируй строку с массивом ссылок!
-  const genPng = (color) => {
-    const c = document.createElement('canvas'); c.width = 32; c.height = 32;
-    const ctx = c.getContext('2d');
-    ctx.fillStyle = color; ctx.beginPath(); ctx.arc(16,16,16,0,Math.PI*2); ctx.fill();
-    return c.toDataURL();
-  };
-  const images = [
-    genPng('#FFD700'), genPng('#EC4899'), genPng('#3B82F6'), genPng('#10B981')
-  ];
-  // const images = ['confetti1.png', 'confetti2.png', 'confetti3.png']; // ТВОИ ФАЙЛЫ
-
-  const confetti = [];
-  function spawnConfetti() {
-    if (confetti.length > 150) {
-      const old = confetti.shift();
-      World.remove(engine.world, old);
     }
-    const x = Math.random() * W;
-    const size = Math.random() * 10 + 20; // 20-30px
-    const img = images[Math.floor(Math.random() * images.length)];
-    const body = Bodies.circle(x, -50, size/2, {
-      restitution: 0.6, frictionAir: 0.02,
-      render: { sprite: { texture: img, xScale: size/32, yScale: size/32 } }
-    });
-    World.add(engine.world, body);
-    confetti.push(body);
+    
+    requestAnimationFrame(draw);
   }
-
-  // Спавним постоянно
-  const spawnInterval = setInterval(() => {
-    spawnConfetti();
-    spawnConfetti();
-  }, 200);
-
-  const mouse = Mouse.create(render.canvas);
-  const mc = MouseConstraint.create(engine, {
-    mouse, constraint: { stiffness: 0.2, render: { visible: false } }
+  
+  draw();
+  
+  // Останавливаем, если закрываем оверлей
+  const obs = new MutationObserver((mutations) => {
+    mutations.forEach((m) => {
+      if (m.target.id === 'win-ov' && !m.target.classList.contains('on')) {
+        isRunning = false;
+        clearInterval(spawnInterval);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        window.removeEventListener('resize', resize);
+        obs.disconnect();
+      }
+    });
   });
-  World.add(engine.world, mc);
-  render.mouse = mouse;
-
-  Render.run(render);
-  const runner = Runner.create();
-  Runner.run(runner, engine);
-
-  setTimeout(() => {
-    clearInterval(spawnInterval);
-    Render.stop(render);
-    Runner.stop(runner);
-    World.clear(engine.world);
-    Engine.clear(engine);
-  }, 60000); // Идёт 1 минуту
+  obs.observe(document.getElementById('win-ov'), { attributes: true, attributeFilter: ['class'] });
 }
 
 /* ── Поделиться победой ── */
