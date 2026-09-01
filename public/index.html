@@ -1168,11 +1168,11 @@ const AudioSys = {
   
   init() {
     // Начальная настройка громкости для звуковых эффектов
-    for(let k in this.sounds) { this.sounds[k].volume = 0.5; }
+    for(let k in this.sounds) { this.sounds[k].volume = 0.2; }
     
     // Громкость фоновой музыки - 5%
     const bgm = document.getElementById('bgm');
-    if (bgm) bgm.volume = 0.05;
+    if (bgm) bgm.volume = 0.02;
   },
   play(name) {
     if(!this.sounds[name]) return;
