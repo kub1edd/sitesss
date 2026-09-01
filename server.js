@@ -135,7 +135,6 @@ const server = http.createServer(async (req, res) => {
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:image" content="https://${req.headers.host}/shares/${slug}.jpg">
-    <meta http-equiv="refresh" content="0; url=https://clips.twitch.tv/${slug}">
 </head>
 <body style="background:#09090b;color:#fff;font-family:sans-serif;text-align:center;padding:50px;">
     Перенаправление на Twitch...
