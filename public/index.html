@@ -891,6 +891,7 @@ function showRoundTransition(onReady) {
   $('rt-subtitle').textContent = stageName;
   $('round-transition').classList.add('on');
   
+  if (IM.pool) IM.pool.style.opacity = '0';
   AudioSys.play('transition');
 
   setTimeout(() => {
@@ -898,6 +899,7 @@ function showRoundTransition(onReady) {
     setTimeout(() => {
       AudioSys.play('transition');
       $('round-transition').classList.remove('on');
+      if (IM.pool) IM.pool.style.opacity = '1';
     }, 200);
   }, 1500);
 }
@@ -1026,7 +1028,7 @@ const IM = {
     if(!this.pool) {
       this.pool = document.createElement('div');
       this.pool.id = 'iframe-pool';
-      this.pool.style.cssText = 'position:fixed; inset:0; pointer-events:none; z-index:50; display:none;';
+      this.pool.style.cssText = 'position:fixed; inset:0; pointer-events:none; z-index:50; display:none; transition: opacity 0.3s;';
       document.body.appendChild(this.pool);
       
       this.b1 = document.createElement('div'); this.b1.className = 'clip-num'; this.b1.textContent = 'КЛИП 1'; this.b1.style.position = 'absolute';
@@ -1252,10 +1254,11 @@ function launchConfetti() {
   
   function spawn() {
     if(!isRunning) return;
-    for(let i=0; i<3; i++) {
+    // Уменьшено количество конфетти: спавним только 1 за тик (было 3)
+    for(let i=0; i<1; i++) {
       confetti.push({
         x: Math.random() * canvas.width,
-        y: -20 - Math.random() * 50, // спавн за верхним краем
+        y: -20 - Math.random() * 50,
         w: Math.random() * 10 + 5,
         h: Math.random() * 15 + 10,
         c: colors[Math.floor(Math.random() * colors.length)],
@@ -1267,7 +1270,8 @@ function launchConfetti() {
     }
   }
   
-  let spawnInterval = setInterval(spawn, 50);
+  // Увеличил интервал с 50 до 80 (чтобы сыпалось реже)
+  let spawnInterval = setInterval(spawn, 80);
   
   function draw() {
     if(!isRunning) return;
